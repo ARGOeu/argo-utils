@@ -88,22 +88,27 @@ eval "$mysqldumb"
 
 ## Archive the hashing file of gocdb files, web server configuration files, web server logs and database.
 cd ${database_dumps} && \
-tar -zcvf ${archives}/${timestamp}_${HOSTNAME}.tar.gz \
+tar -zcpvf ${archives}/${timestamp}_${HOSTNAME}.tar.gz \
 	${timestamp}_${HOSTNAME}_${DATABASE_NAME}.sql \
 	${FOR_ARCHIVING} 
 
 
-# Logs
-if [[ $? -eq 0 ]]; then
-    logger "[mySQLBackupScript] Executed successfully"
-else
-    logger "[mySQLBackupScript] Failed to execute"
-fi
-
+# We want to evaluate whether it was executed successfully or not.
+tar_status=$?
 
 # Delete unnecessary files
 rm -rf ${database_dumps}
 find ${archives} -type f -mtime +60 -exec rm {} \;
+
+
+# Logs
+if [[ ${tar_status} -eq 0 ]]; then
+    logger "[mySQLBackupScript]: Executed successfully"
+	exit 0;
+else
+    logger "[mySQLBackupScript]: Failed to execute" level=error
+	exit 1;
+fi
 
 
 
